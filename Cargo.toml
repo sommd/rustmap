@@ -1,0 +1,10 @@
+[package]
+name = "rustmap"
+version = "0.1.0"
+authors = ["David Sommerich <d.j.s.1050@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+nix = "0.17.0"
+pnet = "0.25.0"
+structopt = "0.3.12"

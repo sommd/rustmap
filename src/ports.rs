@@ -1,13 +1,15 @@
+use nix::errno::Errno;
 use std::fmt;
 use std::io::{ErrorKind, Result};
 use std::net::{SocketAddr, TcpStream};
 use std::time::Duration;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum PortStatus {
     Open,
     Closed,
     Filtered,
+    HostDown,
 }
 
 impl fmt::Display for PortStatus {
@@ -21,8 +23,11 @@ pub fn probe_port(addr: &SocketAddr, timeout: Duration) -> Result<PortStatus> {
         Ok(_) => Ok(PortStatus::Open),
         Err(e) => match e.kind() {
             ErrorKind::TimedOut => Ok(PortStatus::Filtered),
-            ErrorKind::ConnectionRefused => Ok(PortStatus::Closed),
-            _ => Err(e),
+            ErrorKind::ConnectionRefused | ErrorKind::ConnectionReset => Ok(PortStatus::Closed),
+            _ => match e.raw_os_error().map(Errno::from_i32) {
+                Some(Errno::ENETUNREACH) | Some(Errno::EHOSTUNREACH) => Ok(PortStatus::HostDown),
+                _ => Err(e),
+            },
         },
     }
 }

@@ -1,7 +1,7 @@
 mod hosts;
 mod icmp;
+mod ip;
 mod ports;
-mod raw_socket;
 
 use crate::hosts::probe_host;
 use crate::ports::{probe_port, PortStatus};
@@ -10,13 +10,32 @@ use std::str::FromStr;
 use std::time::Duration;
 
 fn main() {
-    let status = probe_host(
-        &IpAddr::from_str("192.168.1.20").unwrap(),
-        Duration::from_millis(1000),
-    )
-    .unwrap();
+    println!(
+        "{}",
+        probe_host(
+            &IpAddr::from_str("192.168.1.20").unwrap(),
+            Duration::from_millis(1000),
+        )
+        .unwrap()
+    );
 
-    println!("{:?}", status);
+    println!(
+        "{}",
+        probe_host(
+            &IpAddr::from_str("2403:5800:7102:8900:922b:34ff:fe5f:1ef4").unwrap(),
+            Duration::from_millis(1000),
+        )
+        .unwrap()
+    );
+
+    println!(
+        "{}",
+        probe_host(
+            &IpAddr::from_str("192.168.1.123").unwrap(),
+            Duration::from_millis(1000),
+        )
+        .unwrap()
+    );
 
     return;
 

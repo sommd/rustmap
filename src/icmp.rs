@@ -1,7 +1,9 @@
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum IcmpEchoType {
     Reply = 0,
+    ReplyV6 = 129,
     Request = 8,
+    RequestV6 = 128,
 }
 
 impl Default for IcmpEchoType {
@@ -21,18 +23,21 @@ pub struct IcmpEchoPacket {
 impl IcmpEchoPacket {
     const HEADER_SIZE: usize = 8;
 
+    pub fn from_ipv4(buf: &[u8]) -> Option<IcmpEchoPacket> {
+        let header_len = ((buf[0] & 0x0F) * 4) as usize;
+        Self::from(&buf[header_len..])
+    }
+
     pub fn from(buf: &[u8]) -> Option<IcmpEchoPacket> {
         let type_ = match buf[0] {
             0 => IcmpEchoType::Reply,
+            129 => IcmpEchoType::ReplyV6,
             8 => IcmpEchoType::Request,
+            128 => IcmpEchoType::RequestV6,
             _ => return None,
         };
 
         if buf[1] != 0 {
-            return None;
-        }
-
-        if internet_checksum(buf) != 0 {
             return None;
         }
 
@@ -42,14 +47,6 @@ impl IcmpEchoPacket {
             sequence_number: u16::from_be_bytes([buf[6], buf[7]]),
             data: Vec::from(&buf[Self::HEADER_SIZE..]),
         })
-    }
-
-    pub fn new_reply(identifier: u16, sequence_number: u16, data: &[u8]) -> IcmpEchoPacket {
-        Self::new(IcmpEchoType::Reply, identifier, sequence_number, data)
-    }
-
-    pub fn new_request(identifier: u16, sequence_number: u16, data: &[u8]) -> IcmpEchoPacket {
-        Self::new(IcmpEchoType::Request, identifier, sequence_number, data)
     }
 
     pub fn new(
@@ -78,9 +75,12 @@ impl IcmpEchoPacket {
         buf[4..=5].copy_from_slice(&self.identifier.to_be_bytes());
         buf[6..=7].copy_from_slice(&self.sequence_number.to_be_bytes());
 
-        let checksum = internet_checksum(&buf[0..=7]);
-        let checksum = internet_checksum_incremental(checksum, &self.data);
-        buf[2..=3].copy_from_slice(&checksum.to_be_bytes());
+        // Calculating the checksum for ICMPv6 is harder, but the OS does it for us!
+        if self.type_ == IcmpEchoType::Reply || self.type_ == IcmpEchoType::Request {
+            let checksum = internet_checksum(&buf[0..=7]);
+            let checksum = internet_checksum_incremental(checksum, &self.data);
+            buf[2..=3].copy_from_slice(&checksum.to_be_bytes());
+        }
     }
 
     pub fn len(&self) -> usize {

@@ -1,3 +1,4 @@
+mod cidr;
 mod hosts;
 mod icmp;
 mod ip;

@@ -24,7 +24,7 @@ pub fn probe_host(addr: &IpAddr, timeout: Duration) -> Result<HostStatus> {
         Socket::new(Domain::ipv6(), Type::raw(), Some(Protocol::icmpv6()))
     }?;
 
-    socket.connect(&SocketAddr::new(addr.clone(), 0).into())?;
+    socket.connect(&SocketAddr::new(*addr, 0).into())?;
 
     let send_packet = |identifier: u16, sequence_number: u16| {
         let buf = Vec::from(&IcmpEchoPacket::new(

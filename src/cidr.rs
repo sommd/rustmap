@@ -116,9 +116,9 @@ impl FromStr for IpAddrRange {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, String> {
-        let slash = s.find("/");
+        let slash = s.find('/');
 
-        let addr = IpAddr::from_str(&s[0..slash.unwrap_or(s.len())]).map_err(|e| e.to_string())?;
+        let addr = IpAddr::from_str(&s[0..slash.unwrap_or_else(|| s.len())]).map_err(|e| e.to_string())?;
 
         match slash {
             Some(slash) => Self::try_new(

@@ -6,10 +6,9 @@ mod ports;
 
 use crate::cidr::IpAddrRange;
 use crate::hosts::{probe_host, HostStatus};
-use crate::ports::{probe_port, PortStatus};
+use crate::ports::probe_port;
 use parse_duration;
-use std::net::{IpAddr, SocketAddr, ToSocketAddrs};
-use std::str::FromStr;
+use std::net::SocketAddr;
 use std::time::Duration;
 use structopt::StructOpt;
 

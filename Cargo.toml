@@ -6,6 +6,5 @@ edition = "2018"
 
 [dependencies]
 nix = "0.17.0"
-pnet = "0.25.0"
 structopt = "0.3.12"
 socket2 = "0.3.12"

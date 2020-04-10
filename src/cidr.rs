@@ -61,10 +61,18 @@ impl IpAddrRange {
     pub fn last_addr(&self) -> IpAddr {
         match self.addr {
             IpAddr::V4(addr) => {
-                Ipv4Addr::from(u32::from(addr) | (u32::max_value() >> self.mask)).into()
+                if self.mask == 32 {
+                    self.addr
+                } else {
+                    Ipv4Addr::from(u32::from(addr) | (u32::max_value() >> self.mask)).into()
+                }
             }
             IpAddr::V6(addr) => {
-                Ipv6Addr::from(u128::from(addr) | (u128::max_value() >> self.mask)).into()
+                if self.mask == 128 {
+                    self.addr
+                } else {
+                    Ipv6Addr::from(u128::from(addr) | (u128::max_value() >> self.mask)).into()
+                }
             }
         }
     }
@@ -108,18 +116,17 @@ impl FromStr for IpAddrRange {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, String> {
-        let mut split = s.splitn(2, "/");
+        let slash = s.find("/");
 
-        let addr = split
-            .next()
-            .ok_or(String::from("missing address"))
-            .and_then(|addr| IpAddr::from_str(addr).map_err(|e| e.to_string()))?;
-        let mask = split
-            .next()
-            .ok_or(String::from("missing mask"))
-            .and_then(|mask| mask.parse::<u8>().map_err(|e| e.to_string()))?;
+        let addr = IpAddr::from_str(&s[0..slash.unwrap_or(s.len())]).map_err(|e| e.to_string())?;
 
-        Self::try_new(addr, mask)
+        match slash {
+            Some(slash) => Self::try_new(
+                addr,
+                u8::from_str(&s[slash + 1..]).map_err(|e| e.to_string())?,
+            ),
+            None => Ok(Self::from(addr)),
+        }
     }
 }
 
@@ -174,8 +181,13 @@ mod tests {
     #[test]
     fn test_parse() {
         assert_eq!(
+            "192.168.1.1".parse::<IpAddrRange>(),
+            Ok(IpAddrRange::new(IpAddr::from([192, 168, 1, 1]), 32))
+        );
+
+        assert_eq!(
             "192.168.1.1/12".parse::<IpAddrRange>(),
-            Ok(IpAddrRange::new(IpAddr::from([192, 168,1, 1]), 12))
+            Ok(IpAddrRange::new(IpAddr::from([192, 168, 1, 1]), 12))
         );
 
         assert_eq!(
@@ -193,10 +205,6 @@ mod tests {
             Err(String::from("invalid IP address syntax"))
         );
         assert_eq!(
-            "192.168.1.1".parse::<IpAddrRange>(),
-            Err(String::from("missing mask"))
-        );
-        assert_eq!(
             "192.168.1.1/".parse::<IpAddrRange>(),
             Err(String::from("cannot parse integer from empty string"))
         );
@@ -206,11 +214,15 @@ mod tests {
         );
         assert_eq!(
             "192.168.1.1/33".parse::<IpAddrRange>(),
-            Err(String::from("mask cannot be more than 32 for an IPv4 address"))
+            Err(String::from(
+                "mask cannot be more than 32 for an IPv4 address"
+            ))
         );
         assert_eq!(
             "::1/129".parse::<IpAddrRange>(),
-            Err(String::from("mask cannot be more than 128 for an IPv6 address"))
+            Err(String::from(
+                "mask cannot be more than 128 for an IPv6 address"
+            ))
         );
     }
 

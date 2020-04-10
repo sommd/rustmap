@@ -4,7 +4,7 @@ use std::io::{ErrorKind, Result};
 use std::net::{SocketAddr, TcpStream};
 use std::time::Duration;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PortStatus {
     Open,
     Closed,

@@ -5,7 +5,7 @@ use std::io::{ErrorKind, Result};
 use std::net::{IpAddr, SocketAddr};
 use std::time::{Duration, Instant};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum HostStatus {
     Up,
     Down,

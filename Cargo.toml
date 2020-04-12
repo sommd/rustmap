@@ -5,7 +5,7 @@ authors = ["David Sommerich <d.j.s.1050@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-nix = "0.17.0"
+libc = "0.2.68"
 parse_duration = "2.1.0"
 socket2 = "0.3.12"
 structopt = "0.3.12"

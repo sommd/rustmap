@@ -1,7 +1,6 @@
 mod cidr;
 mod hosts;
 mod icmp;
-mod ip;
 mod ports;
 
 use crate::cidr::IpAddrRange;

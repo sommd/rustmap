@@ -12,15 +12,35 @@ use std::time::Duration;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "rustmap", about = "Scan for hosts or open ports.")]
+#[structopt()]
+/// Scan for hosts and open ports.
+///
+/// Needs to be run as root, or with the CAP_NET_RAW capability on Linux.
+///
+/// EXAMPLES:{n}
+/// {n}rustmap 127.0.0.1                   Check if a single host is up.
+/// {n}rustmap 127.0.0.1 -p                Scan all TCP ports for a single host.
+/// {n}rustmap 127.0.0.1 ::1 -p            Scan all TCP ports for multiple hosts.
+/// {n}rustmap 127.0.0.0/8 -p 22,80,443    Scan for specific ports in an address range.
 struct Opt {
-    #[structopt(short = "p", long = "--ports")]
+    #[structopt(short, long, require_delimiter = true)]
+    /// Probe ports for each host and optionally specify which ports.
+    ///
+    /// Ports can be specified as a comma-separated list, or left unspecified to scan all ports.
     ports: Option<Vec<u16>>,
 
     #[structopt(short, long, parse(try_from_str = parse_duration::parse), default_value = "1s")]
+    /// Timeout for pinging each host and probing each port.
+    ///
+    /// Parsing is provided by the 'parse_duration' crate and supports almost any notation.
+    /// E.g. '1s', '10 seconds', '1 hour, 15 minutes, 12 seconds', '10m32s112ms'.
     timeout: Duration,
 
     #[structopt(required = true)]
+    /// IP addresses to scan.
+    ///
+    /// Supports IPv4 notation (e.g. '127.0.0.1'), IPv6 notation (e.g. '::1'), IPv4-mapped IPv6
+    /// notation (e.g. '::ffff::1.1.1.1') and CIDR notation (e.g. '192.168.0.0/16', 'fe80::/10').
     addr_ranges: Vec<IpAddrRange>,
 }
 

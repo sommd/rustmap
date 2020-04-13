@@ -12,7 +12,7 @@ keywords = ["nmap", "networking", "scan"]
 categories = ["command-line-utilities", "network-programming"]
 
 [dependencies]
-libc = "0.2.68"
-parse_duration = "2.1.0"
-socket2 = "0.3.12"
-structopt = "0.3.12"
+libc = "^0.2.68"
+parse_duration = "^2.1.0"
+socket2 = "^0.3.12"
+structopt = "^0.3.13"

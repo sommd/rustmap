@@ -140,6 +140,15 @@ impl IntoIterator for IpAddrRange {
     }
 }
 
+impl IntoIterator for &IpAddrRange {
+    type Item = IpAddr;
+    type IntoIter = IntoIter;
+
+    fn into_iter(self) -> IntoIter {
+        self.iter()
+    }
+}
+
 pub struct IntoIter {
     cur: IpAddr,
     last: IpAddr,

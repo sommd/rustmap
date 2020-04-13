@@ -5,8 +5,9 @@ mod ports;
 
 use crate::cidr::IpAddrRange;
 use crate::hosts::{probe_host, HostStatus};
-use crate::ports::probe_port;
+use crate::ports::{probe_port, PortStatus};
 use parse_duration;
+use std::io::{self, Write};
 use std::net::SocketAddr;
 use std::time::Duration;
 use structopt::StructOpt;
@@ -45,45 +46,55 @@ struct Opt {
 }
 
 fn main() {
-    let mut opt = Opt::from_args();
+    let Opt {
+        ports,
+        timeout,
+        addr_ranges,
+    } = Opt::from_args();
 
-    opt.ports = opt.ports.map(|ports| {
-        if ports.is_empty() {
-            (0..u16::max_value()).collect()
-        } else {
-            ports
-        }
-    });
+    let show_closed_ports = matches!(ports, Some(ref vec) if !vec.is_empty());
 
-    opt.addr_ranges
+    let ports = match ports {
+        Some(ref vec) if vec.is_empty() => (0..u16::max_value()).collect(),
+        Some(vec) => vec,
+        None => Vec::default(),
+    };
+
+    addr_ranges
         .iter()
-        .flat_map(|range| range.iter())
-        .for_each(|addr| {
-            let host_status = probe_host(&addr, opt.timeout);
-            let host_up = matches!(host_status, Ok(HostStatus::Up));
+        // Flatten IpAddrRanges into IpAddrs
+        .flatten()
+        // Probe each host
+        .flat_map(|addr| {
+            print!("{:<16} ", addr);
+            io::stdout().flush().expect("flush stdout");
 
-            println!(
-                "{:<16} {}",
-                addr,
-                host_status
-                    .map(|status| status.to_string())
-                    .unwrap_or_else(|e| e.to_string())
-            );
+            let status = probe_host(&addr, timeout);
 
-            if host_up {
-                if let Some(ref ports) = opt.ports {
-                    ports.iter().for_each(|port| {
-                        let port_status = probe_port(&SocketAddr::new(addr, *port), opt.timeout);
+            match &status {
+                Ok(status) => println!("{}", status),
+                Err(error) => println!("{}", error),
+            }
 
-                        println!(
-                            "  :{:<5} {}",
-                            port,
-                            port_status
-                                .map(|status| status.to_string())
-                                .unwrap_or_else(|e| e.to_string())
-                        );
-                    });
+            // Return address only if host is up
+            match status {
+                Ok(HostStatus::Up) => Some(addr),
+                _ => None,
+            }
+        })
+        // Flat map IpAddrs into SocketAddrs for each port
+        .flat_map(|up_addr| {
+            ports
+                .iter()
+                .map(move |port| SocketAddr::new(up_addr, *port))
+        })
+        // Probe each port
+        .for_each(|socket_addr| match probe_port(&socket_addr, timeout) {
+            Ok(status) => {
+                if show_closed_ports || status == PortStatus::Open {
+                    println!("  :{:<5} {}", socket_addr.port(), status);
                 }
             }
+            Err(error) => println!("{}", error),
         });
 }

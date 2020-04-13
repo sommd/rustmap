@@ -1,4 +1,4 @@
-# rustmap
+# Rustmap [![Crates.io](https://img.shields.io/crates/v/rustmap)](https://crates.io/crates/rustmap)
 
 Rustmap is a very simple "Nmap-like" program that can scan for hosts and open TCP ports. It is mostly written for educational purposes (I wanted to learn Rust, and learn a bit more about how Nmap works) so it's quite slow and doesn't have many features.
 

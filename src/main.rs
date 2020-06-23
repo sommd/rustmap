@@ -1,11 +1,10 @@
-mod cidr;
-mod hosts;
-mod icmp;
-mod ports;
-
-use crate::cidr::IpAddrRange;
-use crate::hosts::{probe_host, HostStatus};
-use crate::ports::{probe_port, PortStatus};
+use rustmap::{
+    IpAddrRange,
+    probe_port,
+    probe_host,
+    HostStatus,
+    PortStatus,
+};
 use parse_duration;
 use std::io::{self, Write};
 use std::net::SocketAddr;

@@ -1,6 +1,6 @@
 [package]
 name = "rustmap"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["David Sommerich <d.j.s.1050@gmail.com>"]
 edition = "2018"
 description = "A very simple \"Nmap-like\" program that can scan for hosts and open TCP ports."

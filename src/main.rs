@@ -1,11 +1,5 @@
-use rustmap::{
-    IpAddrRange,
-    probe_port,
-    probe_host,
-    HostStatus,
-    PortStatus,
-};
 use parse_duration;
+use rustmap::{probe_host, probe_port, HostStatus, IpAddrRange, PortStatus};
 use std::io::{self, Write};
 use std::net::SocketAddr;
 use std::time::Duration;
